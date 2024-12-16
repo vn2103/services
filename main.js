@@ -7,6 +7,7 @@ let startX = 0;
 let deltaX = 0;
 let isSwiping = false;
 let isTransitioning = false;
+let swipeThreshold = 50; // Reduced threshold for smoother swipe
 
 function updateSlider() {
     if (isTransitioning) return; // Prevent overlapping animations
@@ -64,11 +65,11 @@ function pauseSlider() {
 
 // Swipe functionality
 function handleTouchStart(event) {
-    if (isTransitioning) return; // Block interaction during transition
+    if (isTransitioning) return; // Block interaction during transitions
     startX = event.touches[0].clientX;
     deltaX = 0;
     isSwiping = true;
-    slides.forEach(slide => slide.style.transition = 'none'); // Disable transitions during swipe
+    slides.forEach(slide => slide.style.transition = 'none'); // Disable transitions for smoother swipe
 }
 
 function handleTouchMove(event) {
@@ -77,7 +78,7 @@ function handleTouchMove(event) {
     deltaX = event.touches[0].clientX - startX;
 
     slides.forEach((slide, index) => {
-        const offset = (index - currentIndex) * 300 + deltaX;
+        const offset = (index - currentIndex) * 300 + deltaX * 0.7; // Reduce swipe movement speed
         slide.style.transform = `translate3d(${offset}px, 0, ${Math.abs(offset) < 1 ? 0 : -200}px) scale(${Math.abs(deltaX) < 1 ? 1 : 0.9})`;
     });
 }
@@ -86,16 +87,17 @@ function handleTouchEnd() {
     if (!isSwiping) return;
     isSwiping = false;
 
-    if (deltaX < -100) {
-        // Swipe left
-        currentIndex = (currentIndex + 1) % slides.length;
-    } else if (deltaX > 100) {
-        // Swipe right
-        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+    // Detect swipe direction based on threshold
+    if (deltaX < -swipeThreshold) {
+        currentIndex = (currentIndex + 1) % slides.length; // Swipe left
+    } else if (deltaX > swipeThreshold) {
+        currentIndex = (currentIndex - 1 + slides.length) % slides.length; // Swipe right
     }
 
     updateSlider();
-    slides.forEach(slide => slide.style.transition = 'transform 0.3s ease, opacity 0.3s ease'); // Reapply transitions
+
+    // Reapply smooth transitions after swipe
+    slides.forEach(slide => slide.style.transition = 'transform 0.3s ease, opacity 0.3s ease');
 }
 
 slides.forEach(slide => {
